@@ -1,0 +1,31 @@
+========================================================================
+LC3Tools Cmake Port
+Copyright 2026 François Aucoin
+========================================================================
+
+This project contains substantial C++ source code from LC3Tools, an open-source 
+project officially hosted at: https://github.com/chiragsakhuja/lc3tools
+
+The C++ source code comes from the following commit:
+https://github.com/chiragsakhuja/lc3tools/blob/d8409060241d35bb31fce0ced534e63e150b54f1/LICENSE
+
+Upstream Licensing & Header Discrepancy:
+-----------------------------------------
+The original LC3tools repository was distributed publicly with a top-level 
+Apache License 2.0. However, individual source code files retain localized, 
+restrictive header text:
+
+"Copyright 2020 McGraw-Hill Education. All rights reserved. No reproduction 
+or distribution without the prior written consent of McGraw-Hill Education."
+
+This clear legal contradiction regarding distribution permissions is noted and 
+documented in the upstream repository's public issue tracker here:
+https://github.com/chiragsakhuja/lc3tools/issues/10
+
+In strict compliance with Section 4 of the Apache 2.0 License, all original 
+copyright and attribution notices are preserved verbatim within the source 
+files of this repository.
+
+This downstream variant strips away the original project's GUI and documentation,
+isolating the core C++ build mechanics into a modernized, rewritten CMake compilation
+environment.
