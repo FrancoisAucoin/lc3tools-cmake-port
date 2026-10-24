@@ -70,12 +70,12 @@
 // process) that it has ended, as the use of Emscripten's `ASYNCIFY` changes how things work.
 // - By the way, porting the simulator to Emscripten was somewhat of a challenge, given that we have
 // what I call "two layers of STDIN", and that Wasm, at least as far as I understand it,
-// does not inherently play well with the concept STDIN.
+// does not inherently play well with the STDIN concept.
 // That's why I had to resort to a few tricks to make this work. It feels a little brittle, but I think
 // it's going to be good enough given that our use case, which is educational, is not performance-critical.
 // - In this example, we technically wouldn't have to manually compile the Wasm bytes and instantiate the 
-// module in two steps. It doesn't hurt, but the approach used here will be all the more interesting in a 
-// situation where we would need to create a lot of Wasm instances without each time compiling the module.
+// module in two steps. It doesn't hurt, but the approach used here would be all the more interesting in a 
+// situation where we needed to create a lot of Wasm instances without each time compiling the module.
 // - As already mentioned above, to make this whole thing work (i.e., to make the two layers of STDIN work),
 // I had to pull out quite a few tricks; i.e., create and implement imported functions and trampolines, create
 // IO hooks with trampolines, configure the Node.js process' STDIN to operate in raw mode, consequently,
@@ -83,7 +83,7 @@
 // while I started this journey with a mindset that this would be a piece of cake, this whole Emscripten porting
 // activity turned out to be quite complex for the simulator. That being said, this program could be improved
 // on several levels, the terminal's STDIN possibly being the major one. Here, I have implemented the bare minimum
-// that would allow for a half-decent user experience. So there is no arrow key navigation and no fancy command
+// that would allow for a half-decent user experience. So there are no arrow key navigation and no fancy command
 // history, but we do have support for backspaces! And the terminal (mostly) assumes ASCII, but that's fine
 // since LC-3 ISA assumes ASCII as well.
 // -------------------------------------------------------------------------------------------------------

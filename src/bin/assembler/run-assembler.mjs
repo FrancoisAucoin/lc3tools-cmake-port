@@ -74,8 +74,8 @@ try {
             (mod) => {
                 myArguments.forEach((arg, index) => {
                     if (isAsmOrBinFile(arg)) {
-                        const data = mod.FS.readFile(`/file_${index}.obj`, { encoding: "utf8" });
-                        writeFileSync(arg.replace(FILE_EXTENSION_REGULAR_EXPRESSION, ".obj"), data, { encoding: "utf-8" });
+                        const data = mod.FS.readFile(`/file_${index}.obj`);
+                        writeFileSync(arg.replace(FILE_EXTENSION_REGULAR_EXPRESSION, ".obj"), data);
                     }
                 });
             }

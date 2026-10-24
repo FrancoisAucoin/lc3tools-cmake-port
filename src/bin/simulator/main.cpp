@@ -32,7 +32,7 @@
 #ifdef __EMSCRIPTEN__
 extern "C"
 {
-    // NOTE: Those are called "imported function" in Emscripten/Wasm jargon.
+    // NOTE: Those are called "imported functions" in Emscripten/Wasm jargon.
     // Those function must be provided by the host (e.g., Node.js code).
 
     int my_imported_getline(char* buffer, int capacity);

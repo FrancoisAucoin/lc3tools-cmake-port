@@ -14,7 +14,7 @@
 
 set(MY_NAMESPACE_PREFIX LC3Tools)                                   # This is the project name, but also used as prefix at several places.
 set(MY_INSTALLATION_TARGETS_NAME "${MY_NAMESPACE_PREFIX}Targets")   # This is used by the targets for the installation-related configurations.
-set(MY_INCLUDE_PREFIX_DIR_NAME lc3tools)                            # Used as prefix directory (for the installation)
+set(MY_INCLUDE_PREFIX_DIR_NAME lc3tools)                            # Used as prefix for installation directory and library names
 
 set(MY_LIB_NAME_BACKEND backend)                                    # The name of the "backend" library
 set(MY_LIB_NAME_COMMON common)                                      # The name of the "common" library
@@ -25,7 +25,7 @@ set(MY_LIB_NAME_TESTING_FRAMEWORK_V2 testing_framework_v2)          # The name o
 set(MY_BIN_NAME_ASSEMBLER assembler)
 set(MY_BIN_NAME_SIMULATOR simulator)
 
-cmake_minimum_required(VERSION 3.31.4)                              # This version requirement is somewhat arbitrary, but it's what I was using on my development machine when I put together this build system.
+cmake_minimum_required(VERSION 3.31.4)                              # This version requirement is somewhat arbitrary, but it's what I was using on my development machine when I put together these CMakeLists.txt instruction files.
 project(
     ${MY_NAMESPACE_PREFIX}
     VERSION 1.0.0                                                   # Project version 1.0.0 here corresponds to LC3Tools (the C++ code) [release 2.1.0](https://github.com/chiragsakhuja/lc3tools/releases/tag/v2.1.0)
@@ -93,5 +93,3 @@ install(
     FILES "${CMAKE_CURRENT_BINARY_DIR}/${MY_NAMESPACE_PREFIX}ConfigVersion.cmake"
     DESTINATION "lib/cmake/${MY_NAMESPACE_PREFIX}"
 )
-
-# message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")

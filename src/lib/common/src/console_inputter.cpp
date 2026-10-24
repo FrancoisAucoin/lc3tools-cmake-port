@@ -24,7 +24,7 @@
 #ifdef __EMSCRIPTEN__
 extern "C"
 {
-    // NOTE: Those are called "imported function" in Emscripten/Wasm jargon.
+    // NOTE: Those are called "imported functions" in Emscripten/Wasm jargon.
     // Those function must be provided by the host (e.g., Node.js code).
     void stdin_set_input_state(bool state);
     bool stdin_is_character_available();

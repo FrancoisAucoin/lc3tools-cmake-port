@@ -127,8 +127,10 @@ convenient `--toolchain` flag, as shown in this example:
 
 ```shell
 mkdir ./build
-# If you want to target Wasm64, add `-DLC3_TOOLS_ENABLE_WASM_64_BIT=true` to
-# the configuration step
+# NOTE 1: If you want to target Wasm64, add `-DLC3_TOOLS_ENABLE_WASM_64_BIT=true` to
+# the configuration step.
+# NOTE 2: The Emscripten SDK version 6.0.9 requires Python 3.10 or above. You can use `EMSDK_PYTHON`
+# to specify which Python installation to use (e.g., `export EMSDK_PYTHON=/path/to/custom/python`)
 cmake \
     -S /path/to/cloned/lc3tools-cmake-port/on/your/system \
     -B ./build \
@@ -158,6 +160,7 @@ After having built the project, the following files of interest will be availabl
   during the build process, for convenience. To run the program, you would do something 
   like this: `node /path/to/lc3tools-run-assembler.mjs /path/to/lc3tools-assembler.mjs /path/to/test.asm`.
   I added a discussion at the top of [src/bin/assembler/run-assembler.mjs](./src/bin/assembler/run-assembler.mjs).
+    * **IMPORTANT:** The program expects the full path for `lc3tools-assembler.mjs`.
 * Simulator
   * **`./build/src/bin/simulator/lc3tools-simulator.mjs`** – This is the Emscripten JavaScript
   glue code for bridging the Node.js host and the Wasm guest (module).
@@ -171,6 +174,7 @@ After having built the project, the following files of interest will be availabl
   like this: `node /path/to/lc3tools-run-simulator.mjs /path/to/lc3tools-simulator.mjs /path/to/test.obj`.
   I added a discussion at the top of [src/bin/simulator/run-simulator.mjs](./src/bin/simulator/run-simulator.mjs). I encourage you to have a look at it, because there are a few constraints worth knowing
   about when it comes to running the Wasm version of the simulator inside a Node.js host.
+    * **IMPORTANT:** The program expects the full path for `lc3tools-simulator.mjs`.
   
 It is worth noting that the `run-assembler.mjs` and `run-simulator.mjs` JavaScript programs
 are just blueprints to get started quickly, and that some (most) applications will require their
@@ -192,7 +196,7 @@ and the new, recommended testing framework (i.e., version 2). Parts of the sourc
 were used by both versions, which is why it is referred to as "common". In the original project,
 the testing framework gets selected based on a pre-processor macro named `API_VER`, and the frameworks'
 `main` functions are both declared from inside a single header file. I didn't retain that approach here.
-Instead, I deleted the [lc3tools/src/test/framework.h](https://github.com/chiragsakhuja/lc3tools/blob/master/src/test/framework.h) header file entirely, and instead created two separate `main.cpp` files: one for each framework. I also moved the user-provided functions inside their respective framework header file, as opposed to declaring
+Instead, I deleted the [lc3tools/src/test/framework.h](https://github.com/chiragsakhuja/lc3tools/blob/master/src/test/framework.h) header file entirely, and created two separate `main.cpp` files: one for each framework. I also moved the user-provided functions inside their respective framework header file, as opposed to declaring
 them at the top of the implementation files. See [src/lib/testing_framework/v2](./src/lib/testing_framework/v2) as an example.
 
 With this new structure, I had to modify some "cross-library" `include` directives (e.g., when the assembler implementation file needs to refer to backend symbols, we must now do `#include <lc3tools/backend/interface.h>`). But internally, inside each library, I kept the flat structure for include directives.
@@ -232,11 +236,11 @@ Also, although not a bug, I did modify [src/backend/decoder.cpp:28 – official 
 ## Miscellaneous
 
 * As I like using `-Werror` for my personal C and C++ projects, I had to add `-Wno-format-security` as
-a compile option for the project to build on Apple's Clang. The "format string is not a string literal (potentially insecure)" warnings happen because a template inside the codebase (see [src/backend/utils.h:118](https://github.com/chiragsakhuja/lc3tools/blob/7006c2b8c68e33fa86237e1395308c73a3445fb2/src/backend/utils.h#L118)) uses `ssprintf` with a non-literal formatting string, which is, per the warning name, insecure. Interestingly, when using `-Werror`, the formatting string type mismatches that caused the bug discussed earlier would not be allowed to happen without `-Wno-format-security`. Ideally, the codebase would be refactored to not use `std::string const &format` in `template<typename ... Args> std::string ssprintf(std::string const & format, Args ... args)`. One safer alternative would be to do something like `template<typename ... Args> std::string ssprintf(const char* format, Args ... args) __attribute__((format(printf, 1, 2)))`. Another, more modern approach could rely on `format`; e.g.,`template<typename ... Args> std::string ssprintf(std::format_string<Args...> format, Args ... args)`. But either approach would require substantial refactoring, so I decided to simply keep `-Wno-format-security` for now and know the risks.
+a compile option for the project to build on Apple's Clang. The `format string is not a string literal (potentially insecure)` warnings happen because a template inside the codebase (see [src/backend/utils.h:118](https://github.com/chiragsakhuja/lc3tools/blob/7006c2b8c68e33fa86237e1395308c73a3445fb2/src/backend/utils.h#L118)) uses `ssprintf` with a non-literal formatting string, which is, per the warning name, insecure. Interestingly, when using `-Werror`, the formatting string type mismatches that cause the bug discussed earlier is not allowed to happen without `-Wno-format-security`. Ideally, the codebase would be refactored to not use `std::string const &format` in `template<typename ... Args> std::string ssprintf(std::string const & format, Args ... args)`. One safer alternative would be to do something like `template<typename ... Args> std::string ssprintf(const char* format, Args ... args) __attribute__((format(printf, 1, 2)))`. Another, more modern approach could rely on `format`; e.g.,`template<typename ... Args> std::string ssprintf(std::format_string<Args...> format, Args ... args)`. But either approach would require substantial refactoring, so I decided to simply keep `-Wno-format-security` for now and keep in mind that doing so comes with non-negligible risks.
 
 ## Experimental status
 
-This is an experimental project, so treat it as such. As stated in the in the [Why I created this project](#why-i-created-this-project) section above, my two main goals here were to (1) make testing using the framework more portable and to (2) add Emscripten support for the assembler and the simulator so I could use them as Wasm modules in my [VS Code extension](https://github.com/FrancoisAucoin/lc3tools-vscode) project. As soon as I felt that those two goals had been accomplished (i.e., that things were working well enough), I stopped, although I still did put some non-negligible efforts into decently documenting everything so that others could make sense of my work, and also so that I could more easily come back at a later time and continue improving the project and extending its scope.
+This is an experimental project, so treat it as such. As stated in the in the [Why I created this project](#why-i-created-this-project) section above, my two main goals here were to (1) make testing using the framework more portable and to (2) add Emscripten support for the assembler and the simulator so I could use them as Wasm modules in my [VS Code extension](https://github.com/FrancoisAucoin/lc3tools-vscode) project. As soon as I felt that those two goals had been achieved (i.e., that things were working well enough), I stopped, although I still did put some non-negligible efforts into decently documenting everything so that others could make sense of my work, and also so that I could more easily come back at a later time and continue improving the project and extending its scope.
 
 ## Copyright
 
