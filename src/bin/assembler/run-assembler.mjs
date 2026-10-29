@@ -40,6 +40,7 @@ if (process.argv.length < 3) {
 }
 
 import { readFileSync, writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 
 const FILE_EXTENSION_REGULAR_EXPRESSION = /(\.asm|\.bin)$/i;
 
@@ -47,7 +48,7 @@ const isAsmOrBinFile = (/** @type {string} */arg) => {
     return FILE_EXTENSION_REGULAR_EXPRESSION.test(arg);
 }
 
-const Module = (await import(process.argv[2]));
+const Module = (await import(pathToFileURL(process.argv[2])));
 
 const myArguments = process.argv.slice(3);
 

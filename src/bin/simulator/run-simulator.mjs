@@ -96,6 +96,7 @@ if (!process.stdin.isTTY) {
 }
 
 import { readFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 
 // NOTE: Using zero here means "execute on next loop event". I think that
 // this value should actually remain zero, else the terminal will feel 
@@ -113,9 +114,9 @@ if (!modulePath.endsWith(".mjs")) {
     throw new Error(`Expecting module path to end with '.mjs' but got '${modulePath}'`);
 }
 
-const wasmPath = modulePath.replace(".mjs", ".wasm");
+const wasmPath = modulePath.replace(/(\.mjs)$/, ".wasm");
 
-const ModuleFactory = (await import(modulePath)).default;
+const ModuleFactory = (await import(pathToFileURL(modulePath))).default;
 
 const wasmBytes = readFileSync(wasmPath);
 const compiledWasmModule = await WebAssembly.compile(wasmBytes);
