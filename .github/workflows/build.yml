@@ -1,0 +1,75 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux (GCC)
+            artifact-id: linux-gcc
+            os: ubuntu-latest
+            use-emsdk: false
+          - name: macOS (Apple Clang)
+            artifact-id: macos-clang
+            os: macos-latest
+            use-emsdk: false
+          - name: Windows (MSVC)
+            artifact-id: windows-msvc
+            os: windows-latest
+            use-emsdk: false
+          - name: Emscripten Node.js (Wasm32)
+            artifact-id: emscripten-nodejs-wasm32
+            os: ubuntu-latest
+            use-emsdk: true
+            emsdk-version: "6.0.9"
+            wasm-flag: "-DLC3_TOOLS_ENABLE_WASM_64_BIT=OFF"
+          - name: Emscripten Node.js (Wasm64)
+            artifact-id: emscripten-nodejs-wasm64
+            os: ubuntu-latest
+            use-emsdk: true
+            emsdk-version: "6.0.9"
+            wasm-flag: "-DLC3_TOOLS_ENABLE_WASM_64_BIT=ON"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup CMake and Ninja
+        uses: lukka/get-cmake@latest
+
+      - name: Update MSVC on Windows
+        if: matrix.artifact-id == 'windows-msvc'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup Emscripten SDK
+        if: matrix.use-emsdk == true
+        uses: emscripten-core/setup-emsdk@v14
+        with:
+          version: ${{ matrix.emsdk-version }}
+
+      - name: Configure CMake (Native)
+        if: matrix.use-emsdk == false
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Configure CMake (Emscripten)
+        if: matrix.use-emsdk == true
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release ${{ matrix.wasm-flag }} -DCMAKE_TOOLCHAIN_FILE="${{ env.EMSDK }}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+
+      - name: Build Project
+        run: cmake --build build --parallel
+
+      - name: Install to Staging
+        run: cmake --install build --prefix ${{ github.workspace }}/staging
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.artifact-id }}
+          path: staging/
