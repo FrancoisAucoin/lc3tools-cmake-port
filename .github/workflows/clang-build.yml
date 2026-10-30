@@ -28,7 +28,7 @@ jobs:
             artifact-id: macos-universal-clang
             os: macos-latest
             use-emsdk: false
-            compiler-args: "-DCMAKE_OSX_ARCHITECTURES=x86_64\;arm64"
+            compiler-args: "'-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64'"
           
           - name: Windows (Clang-cl, x86_64)
             artifact-id: windows-x86_64-clang
