@@ -1,0 +1,108 @@
+name: Clang Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux (Clang, x86_64)
+            artifact-id: linux-x86_64-clang
+            os: ubuntu-latest
+            use-emsdk: false
+            compiler-args: "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
+          
+          - name: Linux (Clang, ARM64)
+            artifact-id: linux-aarch64-clang
+            os: ubuntu-24.04-arm
+            use-emsdk: false
+            compiler-args: "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
+          
+          - name: macOS (Universal Clang)
+            artifact-id: macos-universal-clang
+            os: macos-latest
+            use-emsdk: false
+            compiler-args: "-DCMAKE_OSX_ARCHITECTURES=x86_64\;arm64"
+          
+          - name: Windows (Clang-cl, x86_64)
+            artifact-id: windows-x86_64-clang
+            os: windows-latest
+            use-emsdk: false
+            msvc-arch: "x64"
+            compiler-args: "-DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl"
+          
+          - name: Windows (Clang-cl, ARM64)
+            artifact-id: windows-aarch64-clang
+            os: windows-latest
+            use-emsdk: false
+            msvc-arch: "amd64_arm64"
+            compiler-args: >-
+              -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl
+              -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=ARM64
+              -DCMAKE_C_COMPILER_TARGET=arm64-pc-windows-msvc
+              -DCMAKE_CXX_COMPILER_TARGET=arm64-pc-windows-msvc
+          
+          - name: Emscripten Node.js (Wasm32)
+            artifact-id: emscripten-nodejs-wasm32
+            os: ubuntu-latest
+            use-emsdk: true
+            emsdk-version: "6.0.9"
+            wasm-flag: "-DLC3_TOOLS_ENABLE_WASM_64_BIT=OFF"
+          
+          - name: Emscripten Node.js (Wasm64)
+            artifact-id: emscripten-nodejs-wasm64
+            os: ubuntu-latest
+            use-emsdk: true
+            emsdk-version: "6.0.9"
+            wasm-flag: "-DLC3_TOOLS_ENABLE_WASM_64_BIT=ON"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup CMake and Ninja
+        uses: lukka/get-cmake@latest
+
+      - name: Install Clang on Linux
+        if: startsWith(matrix.artifact-id, 'linux-')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang
+
+      - name: Setup MSVC Environment for Windows
+        if: startsWith(matrix.artifact-id, 'windows-')
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.msvc-arch }}
+
+      - name: Setup Emscripten SDK
+        if: matrix.use-emsdk == true
+        uses: emscripten-core/setup-emsdk@v14
+        with:
+          version: ${{ matrix.emsdk-version }}
+
+      - name: Configure CMake (Native)
+        if: matrix.use-emsdk == false
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release ${{ matrix.compiler-args }}
+
+      - name: Configure CMake (Emscripten)
+        if: matrix.use-emsdk == true
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release ${{ matrix.wasm-flag }} -DCMAKE_TOOLCHAIN_FILE="${{ env.EMSDK }}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+
+      - name: Build Project
+        run: cmake --build build --parallel
+
+      - name: Install to Staging
+        run: cmake --install build --prefix "${{ github.workspace }}/staging"
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-id }}
+          path: staging/
