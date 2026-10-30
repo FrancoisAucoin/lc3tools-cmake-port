@@ -87,6 +87,10 @@ jobs:
         with:
           version: ${{ matrix.emsdk-version }}
 
+      - name: Show compiler
+        if: startsWith(matrix.artifact-id, 'windows-')
+        run: clang-cl --version
+
       - name: Configure CMake (Native)
         if: matrix.use-emsdk == false
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release ${{ matrix.compiler-args }}

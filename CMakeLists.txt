@@ -38,18 +38,25 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 enable_testing()
 
-add_compile_options(
-    -Wall
-    -Wextra
-    -Werror
-    -Wpedantic
-    
-    # Given the use of `-Werror`, the following flags are needed
-    # for the un-modified project to compile on Apple's Clang 21
-    # (and likely as well when using other modern compilers).
-    -Wno-format-security 
-)
-add_link_options($<$<CONFIG:Debug>:-fsanitize=address,undefined>)
+if (MSVC)
+    # TODO: I added this to be able to build in Release mode on Windows with clang-cl.
+    add_compile_options(
+        /W4
+    )
+else()
+    add_compile_options(
+        -Wall
+        -Wextra
+        -Werror
+        -Wpedantic
+        
+        # Given the use of `-Werror`, the following flags are needed
+        # for the un-modified project to compile on Apple's Clang 21
+        # (and likely as well when using other modern compilers).
+        -Wno-format-security 
+    )
+    add_link_options($<$<CONFIG:Debug>:-fsanitize=address,undefined>)
+endif()
 
 if (EMSCRIPTEN)
     if (LC3_TOOLS_ENABLE_WASM_64_BIT)
